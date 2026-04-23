@@ -12,8 +12,8 @@ class WargaController extends Controller
     public function index()
     {
         $warga = User::where('role', 'warga')
-                     ->orderBy('name')
-                     ->get();
+            ->orderBy('name')
+            ->get();
 
         return view('admin.warga.index', compact('warga'));
     }
@@ -52,7 +52,7 @@ class WargaController extends Controller
         ]);
 
         return redirect('/warga')
-               ->with('success', 'Data warga berhasil diperbarui');
+            ->with('success', 'Data warga berhasil diperbarui');
     }
 
     // ================= HAPUS =================
@@ -67,6 +67,27 @@ class WargaController extends Controller
         $warga->delete();
 
         return redirect('/warga')
-               ->with('success', 'Data warga berhasil dihapus');
+            ->with('success', 'Data warga berhasil dihapus');
+    }
+    public function create()
+    {
+        return view('admin.warga.create');
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required',
+            'nik' => 'required|unique:wargas,nik',
+            'alamat' => 'required'
+        ]);
+
+        Warga::create([
+            'name' => $request->name,
+            'nik' => $request->nik,
+            'alamat' => $request->alamat
+        ]);
+
+        return redirect('/warga')->with('success', 'Data warga berhasil ditambahkan');
     }
 }

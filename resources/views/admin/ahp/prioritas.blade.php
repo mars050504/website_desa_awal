@@ -19,17 +19,28 @@
         <table class="table-modern">
             <thead>
                 <tr>
-                    <th width="90">Ranking</th>
+                    <th width="70">Ranking</th>
                     <th>Nama Pemohon</th>
                     <th>Jenis Surat</th>
                     <th>Tanggal</th>
+                    <th>Status Dokumen</th>
                     <th>Nilai</th>
                     <th width="120">Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($hasil as $h)
-                <tr>
+
+                @php
+                $lengkap = (
+                $h['surat']->dok_ktp &&
+                $h['surat']->dok_kk &&
+                $h['surat']->dok_pengantar
+                );
+                @endphp
+
+                <tr class="{{ $lengkap ? 'row-lengkap' : 'row-tidak-lengkap' }}">
+
                     <td>
                         <span class="badge-rank default">
                             {{ $h['ranking'] }}
@@ -37,8 +48,33 @@
                     </td>
 
                     <td>{{ $h['surat']->nama }}</td>
-                    <td>{{ $h['surat']->jenis }}</td>
+                    <td>{{ $h['surat']->nama_jenis }}</td>
+
                     <td>{{ \Carbon\Carbon::parse($h['surat']->tanggal)->format('d M Y') }}</td>
+
+                    <td>
+                        <div class="status-containers">
+
+                            {{-- Status Dokumen --}}
+                            @if($lengkap)
+                            <span class="badge-success">Lengkap</span>
+                            @else
+                            <span class="badge-warning">Tidak Lengkap</span>
+                            @endif
+
+                            {{-- Status Proses --}}
+                            @if($h['surat']->status == 'Diproses')
+                            <span class="badge-warning">Diproses</span>
+
+                            @elseif($h['surat']->status == 'Selesai')
+                            <span class="badge-success">Selesai</span>
+
+                            @elseif($h['surat']->status == 'Ditolak')
+                            <span class="badge-danger">Ditolak</span>
+                            @endif
+
+                        </div>
+                    </td>
 
                     <td>
                         <span class="nilai-prioritas">
@@ -62,10 +98,12 @@
                             </form>
                         </div>
                     </td>
+
                 </tr>
+
                 @empty
                 <tr>
-                    <td colspan="6" class="empty-state">
+                    <td colspan="7" class="empty-state">
                         Belum ada data surat untuk dihitung
                     </td>
                 </tr>

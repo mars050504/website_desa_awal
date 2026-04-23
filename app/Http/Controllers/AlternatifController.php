@@ -7,48 +7,30 @@ use Illuminate\Support\Facades\DB;
 
 class AlternatifController extends Controller
 {
+    // =============================
+    // 1. TAMPILKAN JENIS SURAT
+    // =============================
     public function index()
     {
-        $alternatif = DB::table('alternatif')
-            ->orderBy('kode')
+        $jenisSurat = DB::table('jenis_surat')
+            ->orderBy('id')
             ->get();
 
-        return view('admin.alternatif.index', compact('alternatif'));
+        return view('admin.alternatif.index', compact('jenisSurat'));
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'kode' => 'required',
-            'nama_alternatif' => 'required'
-        ]);
-
-        DB::table('alternatif')->insert([
-            'kode' => $request->kode,
-            'nama_alternatif' => $request->nama_alternatif,
-            'keterangan' => $request->keterangan,
-            'aktif' => 1
-        ]);
-
-        return back()->with('success', 'Alternatif berhasil ditambahkan');
-    }
-
+    // =============================
+    // 2. UPDATE NILAI / URGENSI (OPSIONAL)
+    // =============================
     public function update(Request $request, $id)
     {
-        DB::table('alternatif')
+        DB::table('jenis_surat')
             ->where('id', $id)
             ->update([
-                'nama_alternatif' => $request->nama_alternatif,
-                'keterangan' => $request->keterangan,
-                'aktif' => $request->aktif
+                'nilai' => $request->nilai,
+                'urgensi' => $request->urgensi
             ]);
 
-        return back()->with('success', 'Alternatif berhasil diperbarui');
-    }
-
-    public function destroy($id)
-    {
-        DB::table('alternatif')->where('id', $id)->delete();
-        return back()->with('success', 'Alternatif berhasil dihapus');
+        return back()->with('success', 'Data jenis surat berhasil diperbarui');
     }
 }

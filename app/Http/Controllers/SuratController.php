@@ -4,75 +4,88 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class SuratController extends Controller
 {
-    // ================= HALAMAN PENGAJUAN + RIWAYAT =================
-    public function pengajuan()
-    {
-        $surat = DB::table('surat')
-            ->where('user_id', auth()->id())
-            ->orderByDesc('id')
-            ->get();
-
-        return view('warga.pengajuan-surat', compact('surat'));
-    }
-
-    // ================= HALAMAN RIWAYAT SAJA =================
+    // ================= RIWAYAT =================
     public function riwayat()
     {
         $surat = DB::table('surat')
-            ->where('user_id', auth()->id()) // hanya milik user login
-            ->orderByDesc('id')
+            ->join('jenis_surat', 'surat.jenis', '=', 'jenis_surat.id')
+            ->select('surat.*', 'jenis_surat.nama_jenis')
+            ->where('surat.user_id', auth()->id())
+            ->orderByDesc('surat.id')
             ->get();
 
         return view('warga.riwayat-surat', compact('surat'));
     }
 
-    // ================= FORM AJUKAN SURAT =================
+    // ================= FORM AJUKAN =================
     public function create()
     {
         $jenisSurat = DB::table('jenis_surat')->get();
         return view('warga.ajukan', compact('jenisSurat'));
     }
 
-    // ================= SIMPAN PENGAJUAN =================
+    // ================= FORM DINAMIS =================
+    public function getForm($id)
+    {
+        $jenis = DB::table('jenis_surat')->where('id', $id)->first();
+
+        if (!$jenis) abort(404);
+
+        return view('warga.partials.form_' . $jenis->slug);
+    }
+
+    // ================= STORE =================
     public function store(Request $request)
     {
         $request->validate([
             'nama' => 'required',
             'jenis' => 'required',
-            'dok_ktp' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-            'dok_kk' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-            'dok_pengantar' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
-        $data = [
+        $suratId = DB::table('surat')->insertGetId([
             'user_id' => auth()->id(),
             'nama' => $request->nama,
             'jenis' => $request->jenis,
-            'tanggal' => now()->format('Y-m-d'),
-        ];
+            'tanggal' => now(),
+            'status' => 'Diproses'
+        ]);
 
-        if ($request->hasFile('dok_ktp')) {
-            $data['dok_ktp'] = $request->file('dok_ktp')->store('dokumen');
+        // FILE
+        foreach (['dok_ktp','dok_kk','dok_pengantar'] as $file) {
+            if ($request->hasFile($file)) {
+                $upload = Cloudinary::uploadFile(
+                    $request->file($file)->getRealPath(),
+                    ["resource_type" => "raw"]
+                );
+
+                DB::table('surat')->where('id',$suratId)->update([
+                    $file => $upload->getSecurePath()
+                ]);
+            }
         }
 
-        if ($request->hasFile('dok_kk')) {
-            $data['dok_kk'] = $request->file('dok_kk')->store('dokumen');
+        // DETAIL
+        foreach ($request->except([
+            '_token','nama','jenis','dok_ktp','dok_kk','dok_pengantar'
+        ]) as $key => $value) {
+
+            if ($value !== null && $value !== '') {
+                DB::table('surat_detail')->insert([
+                    'surat_id' => $suratId,
+                    'field_name' => $key,
+                    'value' => $value
+                ]);
+            }
         }
 
-        if ($request->hasFile('dok_pengantar')) {
-            $data['dok_pengantar'] = $request->file('dok_pengantar')->store('dokumen');
-        }
-
-        DB::table('surat')->insert($data);
-
-        return redirect('/pengajuan-surat')
-            ->with('success', 'Pengajuan surat berhasil dikirim');
+        return redirect('/riwayat-surat')->with('success','Pengajuan berhasil');
     }
 
-    // ================= FORM EDIT DOKUMEN =================
+    // ================= EDIT (DETAIL + DATA) =================
     public function edit($id)
     {
         $surat = DB::table('surat')
@@ -80,42 +93,61 @@ class SuratController extends Controller
             ->where('user_id', auth()->id())
             ->first();
 
-        if (!$surat) {
-            abort(404);
-        }
+        if (!$surat) abort(404);
 
-        return view('warga.edit', compact('surat'));
+        $details = DB::table('surat_detail')
+            ->where('surat_id', $id)
+            ->pluck('value','field_name')
+            ->toArray();
+
+        return view('warga.edit', compact('surat','details'));
     }
 
-    // ================= UPDATE DOKUMEN =================
+    // ================= UPDATE (FILE + DATA) =================
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'dok_ktp' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-            'dok_kk' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-            'dok_pengantar' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-        ]);
-
+        // FILE
         $data = [];
 
-        if ($request->hasFile('dok_ktp')) {
-            $data['dok_ktp'] = $request->file('dok_ktp')->store('dokumen');
-        }
+        foreach (['dok_ktp','dok_kk','dok_pengantar'] as $file) {
+            if ($request->hasFile($file)) {
+                $upload = Cloudinary::uploadFile(
+                    $request->file($file)->getRealPath(),
+                    ["resource_type" => "raw"]
+                );
 
-        if ($request->hasFile('dok_kk')) {
-            $data['dok_kk'] = $request->file('dok_kk')->store('dokumen');
-        }
-
-        if ($request->hasFile('dok_pengantar')) {
-            $data['dok_pengantar'] = $request->file('dok_pengantar')->store('dokumen');
+                $data[$file] = $upload->getSecurePath();
+            }
         }
 
         DB::table('surat')
-            ->where('id', $id)
-            ->where('user_id', auth()->id())
+            ->where('id',$id)
+            ->where('user_id',auth()->id())
             ->update($data);
 
-        return redirect('/pengajuan-surat')
-            ->with('success', 'Dokumen berhasil diperbarui');
+        // DATA DINAMIS
+        foreach ($request->except([
+            '_token','dok_ktp','dok_kk','dok_pengantar'
+        ]) as $field => $value) {
+
+            DB::table('surat_detail')->updateOrInsert(
+                ['surat_id'=>$id,'field_name'=>$field],
+                ['value'=>$value]
+            );
+        }
+
+        return redirect('/riwayat-surat')
+            ->with('success','Data berhasil diperbarui');
+    }
+
+    // ================= DELETE =================
+    public function destroy($id)
+    {
+        DB::table('surat')
+            ->where('id',$id)
+            ->where('user_id',auth()->id())
+            ->delete();
+
+        return redirect('/riwayat-surat')->with('success','Data dihapus');
     }
 }

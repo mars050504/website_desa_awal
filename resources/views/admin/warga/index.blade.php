@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-
+@section('title', 'Warga')
 @section('content')
 
 <div class="page-header">
@@ -15,10 +15,10 @@
         </div>
 
         <div class="card-toolbar">
-            <input type="text" class="search-input" placeholder="Cari warga...">
-            <a href="#" class="btn-primary">
-                <i class="fas fa-plus"></i> Tambah Warga
-            </a>
+            <input type="text" id="searchWarga" class="search-input" placeholder="Cari warga...">
+                <a href="{{ url('/warga/create') }}" class="btn-primary">
+                    <i class="fas fa-plus"></i> Tambah Warga
+                </a> 
         </div>
     </div>
 
@@ -69,3 +69,29 @@
 </div>
 
 @endsection
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+
+        const input = document.getElementById("searchWarga");
+        const rows = document.querySelectorAll(".table-modern tbody tr");
+
+        input.addEventListener("keyup", function() {
+
+            let keyword = this.value.toLowerCase();
+
+            rows.forEach(function(row) {
+
+                let text = row.innerText.toLowerCase();
+
+                if (text.includes(keyword)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+
+            });
+
+        });
+
+    });
+</script>

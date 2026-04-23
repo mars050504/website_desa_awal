@@ -7,7 +7,7 @@
     <div class="card-warga">
 
         <div class="card-header-warga">
-            <h3>Lengkapi Dokumen</h3>
+            <h3>Edit Data Pengajuan</h3>
         </div>
 
         <form method="POST"
@@ -17,64 +17,88 @@
 
             @csrf
 
-            {{-- KTP --}}
-            <div class="form-group">
-                <label>KTP</label>
+            {{-- ================= DATA WARGA ================= --}}
+            <h4 style="margin-bottom:15px;">Data Pemohon</h4>
 
-                @if($surat->dok_ktp)
-                    <div class="file-info">
-                        <span class="badge-success">Sudah Upload</span>
-                        <a href="{{ asset('storage/'.$surat->dok_ktp) }}"
-                           target="_blank"
-                           class="file-link">
-                           Lihat File
-                        </a>
-                    </div>
-                @endif
+            <div class="form-grid">
 
-                <input type="file" name="dok_ktp">
+                @foreach($details as $field => $value)
+                <div class="form-group">
+                    <label>{{ ucwords(str_replace('_',' ',$field)) }}</label>
+                    <input type="text" name="{{ $field }}" value="{{ $value }}">
+                </div>
+                @endforeach
+
             </div>
 
-            {{-- KK --}}
-            <div class="form-group">
-                <label>Kartu Keluarga</label>
+            {{-- ================= DOKUMEN ================= --}}
+            <h4 style="margin-top:30px;">Dokumen</h4>
 
-                @if($surat->dok_kk)
-                    <div class="file-info">
-                        <span class="badge-success">Sudah Upload</span>
-                        <a href="{{ asset('storage/'.$surat->dok_kk) }}"
-                           target="_blank"
-                           class="file-link">
-                           Lihat File
-                        </a>
-                    </div>
-                @endif
+            <div class="form-grid">
 
-                <input type="file" name="dok_kk">
+                {{-- KTP --}}
+                <div class="form-group">
+                    <label>KTP</label>
+
+                    @if($surat->dok_ktp)
+                        <div class="file-info">
+                            <span class="badge-success">Sudah Upload</span>
+                            <a href="{{ $surat->dok_ktp }}" target="_blank" class="file-link">
+                               Lihat File
+                            </a>
+                        </div>
+                    @endif
+
+                    <input type="file" name="dok_ktp">
+                </div>
+
+                {{-- KK --}}
+                <div class="form-group">
+                    <label>Kartu Keluarga</label>
+
+                    @if($surat->dok_kk)
+                        <div class="file-info">
+                            <span class="badge-success">Sudah Upload</span>
+                            <a href="{{ $surat->dok_kk }}" target="_blank" class="file-link">
+                               Lihat File
+                            </a>
+                        </div>
+                    @endif
+
+                    <input type="file" name="dok_kk">
+                </div>
+
+                {{-- Pengantar --}}
+                <div class="form-group">
+                    <label>Surat Pengantar</label>
+
+                    @if($surat->dok_pengantar)
+                        <div class="file-info">
+                            <span class="badge-success">Sudah Upload</span>
+                            <a href="{{ $surat->dok_pengantar }}" target="_blank" class="file-link">
+                               Lihat File
+                            </a>
+                        </div>
+                    @endif
+
+                    <input type="file" name="dok_pengantar">
+                </div>
+
             </div>
 
-            {{-- Surat Pengantar --}}
-            <div class="form-group">
-                <label>Surat Pengantar</label>
+            {{-- BUTTON --}}
+            <div style="margin-top:25px; display:flex; gap:10px;">
 
-                @if($surat->dok_pengantar)
-                    <div class="file-info">
-                        <span class="badge-success">Sudah Upload</span>
-                        <a href="{{ asset('storage/'.$surat->dok_pengantar) }}"
-                           target="_blank"
-                           class="file-link">
-                           Lihat File
-                        </a>
-                    </div>
-                @endif
+                {{-- 🔙 KEMBALI --}}
+                <a href="/riwayat-surat" class="btn-warning">
+                    ← Kembali
+                </a>
 
-                <input type="file" name="dok_pengantar">
-            </div>
-
-            <div style="margin-top:20px;">
+                {{-- 💾 SIMPAN --}}
                 <button type="submit" class="btn-primary">
-                    Simpan Dokumen
+                    Simpan Perubahan
                 </button>
+
             </div>
 
         </form>

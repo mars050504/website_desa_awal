@@ -17,6 +17,14 @@
             <textarea name="isi" rows="6" required>{{ $berita->isi }}</textarea>
         </div>
 
+        {{-- PREVIEW GAMBAR --}}
+        @if($berita->gambar)
+            <div class="form-group">
+                <label>Gambar Saat Ini</label><br>
+                <img src="{{ $berita->gambar }}" width="200" style="border-radius:10px;">
+            </div>
+        @endif
+
         <div class="form-group">
             <label>Gambar Baru (opsional)</label>
             <input type="file" name="gambar">

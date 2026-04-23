@@ -16,29 +16,44 @@ class JenisSuratController extends Controller
 
     public function store(Request $request)
     {
+
+        if ($request->urgensi == 'Tidak Mendesak') {
+            $nilai = 1;
+        } elseif ($request->urgensi == 'Tergolong Menengah') {
+            $nilai = 2;
+        } else {
+            $nilai = 3;
+        }
+
         DB::table('jenis_surat')->insert([
             'nama_jenis' => $request->nama_jenis,
-            'nilai' => $request->nilai,
             'urgensi' => $request->urgensi,
+            'nilai' => $nilai
         ]);
 
         return back()->with('success', 'Jenis surat berhasil ditambahkan');
     }
 
-    public function update(Request $request, $id)
+    public function updateNilai(Request $request, $id)
     {
-        DB::table('jenis_surat')->where('id', $id)->update([
-            'nama_jenis' => $request->nama_jenis,
-            'nilai' => $request->nilai,
-            'urgensi' => $request->urgensi,
-        ]);
+        $nilai = $request->nilai;
 
-        return back()->with('success', 'Jenis surat berhasil diperbarui');
-    }
+        if ($nilai == 1) {
+            $urgensi = 'Tidak Mendesak';
+        } elseif ($nilai == 2) {
+            $urgensi = 'Tergolong Menengah';
+        } elseif ($nilai == 3) {
+            $urgensi = 'Mendesak';
+        } else {
+            $urgensi = 'Tidak Mendesak'; // default aman
+        }
+        DB::table('jenis_surat')
+            ->where('id', $id)
+            ->update([
+                'nilai' => $nilai,
+                'urgensi' => $urgensi
+            ]);
 
-    public function destroy($id)
-    {
-        DB::table('jenis_surat')->where('id', $id)->delete();
-        return back()->with('success', 'Jenis surat dihapus');
+        return back()->with('success', 'Nilai & urgensi berhasil diperbarui');
     }
 }

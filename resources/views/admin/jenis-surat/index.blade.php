@@ -1,5 +1,7 @@
 @extends('layouts.admin')
 
+@section('title', 'Jenis Surat')
+
 @section('content')
 
 <div class="page-header">
@@ -36,11 +38,6 @@
                 <option value="Tergolong Menengah">Tergolong Menengah</option>
                 <option value="Tidak Mendesak">Tidak Mendesak</option>
             </select>
-        </div>
-
-        <div class="form-group">
-            <label>Nilai Bobot</label>
-            <input type="number" step="0.01" name="nilai" placeholder="0.00" required>
         </div>
 
         <div class="form-footer">
@@ -89,8 +86,9 @@
                         </td>
 
                         <td>
-                            <input type="number" step="0.01" name="nilai"
-                                value="{{ $j->nilai }}">
+                            <span class="badge-modern">
+                                {{ $j->nilai }}
+                            </span>
                         </td>
 
                         <td>

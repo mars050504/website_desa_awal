@@ -1,108 +1,313 @@
-* {
-    box-sizing: border-box;
-    font-family: Arial, Helvetica, sans-serif;
+/* ================= GLOBAL ================= */
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',Arial,Helvetica,sans-serif;
 }
 
-body {
-    margin: 0;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(135deg, #4e73df, #1cc88a);
+body{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:linear-gradient(135deg,#4E73DF,#1CC88A);
+overflow:hidden;
+position:relative;
 }
 
-.login-card {
-    width: 360px;
-    background: #ffffff;
-    padding: 35px 25px 45px;
-    border-radius: 30px;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-    position: relative;
+/* ================= BACKGROUND EFFECT ================= */
+
+body::before,
+body::after{
+content:"";
+position:absolute;
+border-radius:50%;
+pointer-events:none; /* 🔥 PENTING: biar tidak nutup klik */
+z-index:0;
 }
 
-.login-card h2 {
-    text-align: center;
-    margin-bottom: 25px;
-    color: #2e59d9;
-    font-weight: 700;
+body::before{
+width:600px;
+height:600px;
+background:rgba(255,255,255,0.1);
+top:-200px;
+right:-150px;
 }
 
-.form-group {
-    margin-bottom: 18px;
+body::after{
+width:500px;
+height:500px;
+background:rgba(255,255,255,0.08);
+bottom:-180px;
+left:-120px;
 }
 
-.form-group label {
-    display: block;
-    margin-bottom: 6px;
-    color: #4e73df;
-    font-size: 14px;
-    font-weight: 600;
+/* ================= LOGIN CARD ================= */
+
+.login-card{
+width:380px;
+background:rgba(255,255,255,0.95);
+padding:40px 30px 50px;
+border-radius:28px;
+box-shadow:0 20px 45px rgba(0,0,0,0.2);
+position:relative;
+z-index:2; /* 🔥 DI ATAS BACKGROUND */
+backdrop-filter:blur(8px);
+transition:0.3s;
 }
 
-.form-group input {
-    width: 100%;
-    padding: 11px 12px;
-    border-radius: 8px;
-    border: 1px solid #d1d3e2;
-    outline: none;
-    font-size: 14px;
-    transition: 0.2s;
+.login-card:hover{
+transform:translateY(-5px);
+box-shadow:0 25px 55px rgba(0,0,0,0.25);
 }
 
-.form-group input:focus {
-    border-color: #4e73df;
-    box-shadow: 0 0 0 2px rgba(78,115,223,0.2);
+/* ================= LOGO ================= */
+
+.logo-area{
+text-align:center;
+margin-bottom:25px;
 }
 
-.btn-login {
-    width: 100%;
-    padding: 11px;
-    border-radius: 8px;
-    border: none;
-    background: linear-gradient(90deg, #4e73df, #224abe);
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 8px;
-    transition: 0.3s;
+.logo-area img{
+    width:100px;
+    margin-bottom:12px;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
 }
 
-.btn-login:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 15px rgba(78,115,223,0.3);
+.logo-area h2{
+color:#224ABE;
+font-weight:700;
+font-size:20px;
 }
 
-.footer-text {
-    position: absolute;
-    bottom: 12px;
-    left: 0;
-    right: 0;
-    text-align: center;
-    font-size: 12px;
-    color: #858796;
+/* ================= FORM ================= */
+
+.form-group{
+margin-bottom:18px;
+position:relative;
+z-index:3; /* 🔥 paling atas */
 }
 
-@media (max-width: 420px) {
-    .login-card {
-        width: 90%;
-    }
-}
-/* Tombol Register - Hijau brand */
-.btn-register {
-    width: 100%;
-    padding: 11px;
-    border-radius: 8px;
-    border: none;
-    background: linear-gradient(90deg, #4e73df, #224abe);
-    color: rgb(255, 255, 255);
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 8px;
-    transition: 0.3s;
+.form-group label{
+display:block;
+margin-bottom:6px;
+font-size:13px;
+color:#4E73DF;
+font-weight:600;
 }
 
-.btn-register:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 15px rgba(28,200,138,0.3);
+.form-group input{
+width:100%;
+padding:12px 14px;
+border-radius:10px;
+border:1px solid #d1d3e2;
+font-size:14px;
+transition:0.25s;
+background:#f8f9fc;
+position:relative;
+z-index:5;
+}
+
+.form-group input:focus{
+border-color:#4E73DF;
+background:white;
+outline:none;
+box-shadow:0 0 0 3px rgba(78,115,223,0.15);
+}
+
+/* ================= BUTTON LOGIN ================= */
+
+/* ================= BUTTON LOGIN ================= */
+
+.btn-login{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:12px;
+    background:linear-gradient(135deg,#4E73DF,#224ABE);
+    color:white;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    margin-top:10px;
+    transition:0.3s;
+    box-shadow:0 10px 20px rgba(78,115,223,0.25);
+
+    position:relative;
+    overflow:hidden;
+}
+
+.btn-login:hover{
+    transform:translateY(-3px);
+    box-shadow:0 15px 30px rgba(78,115,223,0.35);
+}
+
+/* GLOW EFFECT */
+.btn-login::before{
+    content:"";
+    position:absolute;
+    width:120%;
+    height:100%;
+    top:0;
+    left:-120%;
+    background:rgba(255,255,255,0.25);
+    transform:skewX(-20deg);
+    transition:0.5s;
+}
+
+.btn-login:hover::before{
+    left:120%;
+}
+
+/* CLICK EFFECT */
+.btn-login:active{
+    transform:scale(0.96);
+    box-shadow:0 5px 15px rgba(0,0,0,0.2);
+}
+
+
+/* ================= BUTTON REGISTER ================= */
+
+.btn-register{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:12px;
+    background:linear-gradient(135deg,#1CC88A,#17A673);
+    color:white;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    margin-top:10px;
+    transition:0.3s;
+    box-shadow:0 10px 20px rgba(28,200,138,0.25);
+
+    position:relative;
+    overflow:hidden;
+}
+
+.btn-register:hover{
+    transform:translateY(-3px);
+    box-shadow:0 15px 30px rgba(28,200,138,0.35);
+}
+
+/* GLOW EFFECT */
+.btn-register::before{
+    content:"";
+    position:absolute;
+    width:120%;
+    height:100%;
+    top:0;
+    left:-120%;
+    background:rgba(255,255,255,0.25);
+    transform:skewX(-20deg);
+    transition:0.5s;
+}
+
+.btn-register:hover::before{
+    left:120%;
+}
+
+.btn-register:active{
+    transform:scale(0.96);
+    box-shadow:0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* ================= LINK REGISTER ================= */
+
+.register-link{
+text-align:center;
+margin-top:15px;
+font-size:13px;
+color:#666;
+}
+
+.register-link a{
+color:#4E73DF;
+font-weight:600;
+}
+
+/* ================= BACK BUTTON ================= */
+
+.back-btn{
+    position:absolute;
+    top:25px;
+    left:25px;
+    background:rgb(186, 148, 25);
+    padding:8px 14px;
+    border-radius:30px;
+    font-size:13px;
+    color:#000000;
+    box-shadow:0 5px 15px rgba(0,0,0,0.15);
+    transition:0.25s;
+    z-index:3;
+    overflow:hidden;
+    font-weight: bold;
+}
+
+.back-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 8px 18px rgba(0,0,0,0.25);
+}
+
+/* 🔥 GLOW SAJA (tidak ubah layout) */
+.back-btn::before{
+    content:"";
+    position:absolute;
+    width:120%;
+    height:100%;
+    top:0;
+    left:-120%;
+    background:rgba(255,255,255,0.4);
+    transform:skewX(-20deg);
+    transition:0.5s;
+}
+
+.back-btn:hover::before{
+    left:120%;
+}
+
+/* ================= FOOTER ================= */
+
+.footer-text{
+position:absolute;
+bottom:15px;
+left:0;
+right:0;
+text-align:center;
+font-size:12px;
+color:#858796;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media(max-width:420px){
+
+.login-card{
+width:90%;
+padding:35px 25px 45px;
+}
+
+.logo-area img{
+width:70px;
+}
+
+}
+
+/* ================= ALERT ================= */
+
+.alert-error{
+background:#fdecea;
+color:#b71c1c;
+padding:12px 15px;
+border-radius:8px;
+margin-bottom:15px;
+font-size:13px;
+}
+
+.alert-error ul{
+margin:0;
+padding-left:18px;
 }
