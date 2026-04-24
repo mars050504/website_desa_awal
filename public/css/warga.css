@@ -430,28 +430,31 @@ html {
 @media (max-width: 768px) {
     .hero {
         min-height: 40vh;
-        padding: 100px 20px 80px;
+        padding: 80px 20px 60px;
 
-        background-size: 100% 100%; /* 🔥 ditarik full (lebar & tinggi) */
-        background-position: center;
+        background-size: 100% 100%;
+        background-position: top center;
         background-repeat: no-repeat;
     }
 
     .hero-content {
-        margin-top: -40px;
+        margin-top: -30px;
     }
 
     .hero h1 {
-        font-size: 24px; /* 🔥 tadi error -10px */
+        font-size: 15pt; /* 🔥 lebih kecil & pas */
+        line-height: 1.3;
     }
 
     .hero p {
-        font-size: 14px;
-        margin: 10px 0 15px;
+        font-size: 10pt; /* 🔥 diperkecil */
+        margin: 8px 0 12px;
     }
 
     .btn-hero {
-        margin-top: 30px;
+        margin-top: 140px;
+        font-size: 13px; /* 🔥 tombol ikut kecil */
+        padding: 10px 18px;
     }
 }
 
@@ -1297,9 +1300,6 @@ textarea {
         gap: 15px;
     }
 
-    .hero h1 {
-        font-size: 28px;
-    }
 
     .container-warga {
         padding: 100px 5% 50px;
