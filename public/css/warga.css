@@ -465,7 +465,7 @@ html {
     }
 
     .btn-hero {
-        margin-top: auto; /* 🔥 otomatis ke bawah */
+        margin-top: 140px; /* 🔥 otomatis ke bawah */
         font-size: 13px;
         padding: 10px 18px;
     }
