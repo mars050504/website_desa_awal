@@ -336,11 +336,9 @@ html {
     color: white;
     position: relative;
     overflow: hidden;
-
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-
     display: flex;
     align-items: flex-start;
     /* 🔥 konten ke atas */
@@ -431,31 +429,29 @@ html {
 
 @media (max-width: 768px) {
     .hero {
-        min-height: 50vh;
-        /* 🔥 JANGAN full layar */
-        padding: 80px 20px 60px;
-        background-size: 120%;
-        background-position: center top;
-        /* fokus ke wajah */
+        min-height: 40vh;
+        padding: 100px 20px 80px;
+
+        background-size: 100% 100%; /* 🔥 ditarik full (lebar & tinggi) */
+        background-position: center;
+        background-repeat: no-repeat;
     }
 
     .hero-content {
-        margin-top: -10px;
+        margin-top: -40px;
     }
 
     .hero h1 {
-        font-size: -10px;
+        font-size: 24px; /* 🔥 tadi error -10px */
     }
 
     .hero p {
         font-size: 14px;
-        margin: 70px 0 15px;
+        margin: 10px 0 15px;
     }
 
     .btn-hero {
-        margin-top: 50px;
-        padding: 12px 20px;
-        font-size: 14px;
+        margin-top: 30px;
     }
 }
 
@@ -2276,4 +2272,3 @@ textarea {
     opacity: 0;
     transition: opacity 0.5s ease;
 }
-
