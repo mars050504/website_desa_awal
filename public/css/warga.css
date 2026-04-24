@@ -428,34 +428,48 @@ html {
 }
 
 @media (max-width: 768px) {
+
     .hero {
-        min-height: 40vh;
+        min-height: 45vh; /* 🔥 sedikit lebih tinggi biar lega */
         padding: 80px 20px 60px;
 
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+
         background-size: 100% 100%;
-        background-position: top center;
+        background-position: top center; /* 🔥 fokus ke wajah */
         background-repeat: no-repeat;
     }
 
     .hero-content {
-        margin-top: -30px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+
+        height: 100%;
+        margin-top: 15px; /* 🔥 posisi ideal (tidak nutup muka) */
     }
 
     .hero h1 {
-        font-size: 15pt; /* 🔥 lebih kecil & pas */
+        font-size: 18px; /* 🔥 pas untuk HP */
         line-height: 1.3;
+        font-weight: 700;
     }
 
     .hero p {
-        font-size: 10pt; /* 🔥 diperkecil */
+        font-size: 12px; /* 🔥 lebih kecil & rapi */
         margin: 8px 0 12px;
+        opacity: 0.9;
     }
 
     .btn-hero {
-        margin-top: 140px;
-        font-size: 13px; /* 🔥 tombol ikut kecil */
+        margin-top: auto; /* 🔥 otomatis ke bawah */
+        font-size: 13px;
         padding: 10px 18px;
     }
+
 }
 
 /* ================= CONTAINER ================= */
