@@ -10,15 +10,13 @@ font-family:'Poppins',Arial,Helvetica,sans-serif;
 body{
     margin: 0;
     min-height: 100vh;
-    min-height: 100dvh; /* 🔥 fix tinggi real di mobile */
-
+    min-height: 100dvh;
     display: flex;
     justify-content: center;
     align-items: center;
-
     background: linear-gradient(135deg,#4E73DF,#1CC88A);
-    
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto; /* 🔥 FIX UTAMA */
     position: relative;
 }
 
@@ -47,6 +45,18 @@ body::after{
     background:rgba(255,255,255,0.08);
     bottom:-180px;
     left:-120px;
+}
+.login-card{
+    width:380px;
+    max-height:90vh; /* 🔥 BATAS TINGGI */
+    overflow-y:auto; /* 🔥 BISA SCROLL DALAM CARD */
+
+    background:rgba(255,255,255,0.95);
+    padding:40px 30px 50px;
+    border-radius:28px;
+    box-shadow:0 20px 45px rgba(0,0,0,0.2);
+    position:relative;
+    z-index:2;
 }
 @media(max-width:768px){
 
@@ -294,13 +304,11 @@ font-weight:600;
 /* ================= FOOTER ================= */
 
 .footer-text{
-position:absolute;
-bottom:15px;
-left:0;
-right:0;
-text-align:center;
-font-size:12px;
-color:#858796;
+    margin-top:20px;
+    text-align:center;
+    font-size:12px;
+    color:#858796;
+    position:relative; /* 🔥 FIX */
 }
 
 /* ================= RESPONSIVE ================= */
@@ -334,4 +342,56 @@ font-size:13px;
 .alert-error ul{
 margin:0;
 padding-left:18px;
+}
+/* ================= PASSWORD FIX FINAL ================= */
+
+.input-password{
+    position: relative;
+}
+
+.input-password input{
+    padding-right: 45px;
+}
+
+/* ICON WRAPPER */
+.toggle-password{
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+
+    width: 22px;
+    height: 22px;
+
+    color: #666;
+
+    z-index: 10; /* 🔥 penting biar ga ketutup input */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* SVG */
+.toggle-password svg{
+    width: 100%;
+    height: 100%;
+}
+
+/* default */
+.icon-eye{
+    display: block;
+}
+
+.icon-eye-off{
+    display: none;
+}
+
+/* saat aktif */
+.toggle-password.active .icon-eye{
+    display: none;
+}
+
+.toggle-password.active .icon-eye-off{
+    display: block;
 }
