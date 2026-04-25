@@ -50,9 +50,6 @@ class AuthController extends Controller
         ];
     }
 
-    /**
-     * 🔹 REGISTER
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -75,7 +72,8 @@ class AuthController extends Controller
             'role' => 'warga',
             'nik' => $request->nik,
             'alamat' => null,
-            'phone' => $request->phone
+            'phone' => $request->phone,
+            'email_verified_at' => now() // 🔥 langsung dianggap verified
         ]);
 
         // 🔥 simpan ke password_logs
@@ -89,14 +87,9 @@ class AuthController extends Controller
             'time_sha1' => $hashData['time_sha1'],
         ]);
 
-        $user->sendEmailVerificationNotification();
-
-        return redirect('/login')->with('success', 'Registrasi berhasil, cek email untuk verifikasi akun');
+        return redirect('/login')->with('success', 'Registrasi berhasil, silakan login');
     }
 
-    /**
-     * 🔹 LOGIN
-     */
     public function authenticate(Request $request)
     {
         $request->validate([
