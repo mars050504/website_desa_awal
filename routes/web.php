@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\WargaController;
 use App\Http\Controllers\Admin\JenisSuratController;
 use App\Http\Controllers\StrukturController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use App\Http\Controllers\Admin\BackupController;
 
 /*
 |--------------------------------------------------------------------------
@@ -166,6 +167,9 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/wallpaper', [SettingController::class, 'uploadWallpaper']);
             Route::post('/wallpaper/set', [SettingController::class, 'setWallpaper']);
             Route::post('/wallpaper/delete', [SettingController::class, 'deleteWallpaper']);
+            Route::get('/admin/backup', [BackupController::class, 'backup'])
+                ->middleware('auth')
+                ->name('admin.backup');
         });
 
         // KRITERIA
