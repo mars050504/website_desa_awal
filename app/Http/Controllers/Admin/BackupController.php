@@ -13,39 +13,42 @@ class BackupController extends Controller
     $dbName = env('DB_DATABASE');
 
     $fileName = 'backup_' . date('Y-m-d_H-i-s') . '.sql';
+    $filePath = storage_path('app/' . $fileName);
 
-    return response()->streamDownload(function () use ($tables, $dbName) {
+    $handle = fopen($filePath, 'w');
 
-        echo "-- Backup Database\n";
-        echo "-- Generated: " . date('Y-m-d H:i:s') . "\n\n";
+    fwrite($handle, "-- Backup Database\n");
+    fwrite($handle, "-- Generated: " . date('Y-m-d H:i:s') . "\n\n");
 
-        foreach ($tables as $table) {
-            $tableName = $table->{"Tables_in_$dbName"};
+    foreach ($tables as $table) {
+        $tableName = $table->{"Tables_in_$dbName"};
 
-            echo "DROP TABLE IF EXISTS `$tableName`;\n";
+        fwrite($handle, "DROP TABLE IF EXISTS `$tableName`;\n");
 
-            $create = DB::select("SHOW CREATE TABLE `$tableName`");
-            echo $create[0]->{'Create Table'} . ";\n\n";
+        $create = DB::select("SHOW CREATE TABLE `$tableName`");
+        fwrite($handle, $create[0]->{'Create Table'} . ";\n\n");
 
-            $rows = DB::table($tableName)->get();
+        $rows = DB::table($tableName)->get();
 
-            foreach ($rows as $row) {
-                $values = [];
+        foreach ($rows as $row) {
+            $values = [];
 
-                foreach ((array)$row as $value) {
-                    if (is_null($value)) {
-                        $values[] = "NULL";
-                    } else {
-                        $values[] = "'" . str_replace("'", "''", $value) . "'";
-                    }
+            foreach ((array)$row as $value) {
+                if (is_null($value)) {
+                    $values[] = "NULL";
+                } else {
+                    $values[] = "'" . str_replace("'", "''", $value) . "'";
                 }
-
-                echo "INSERT INTO `$tableName` VALUES (" . implode(',', $values) . ");\n";
             }
 
-            echo "\n\n";
+            fwrite($handle, "INSERT INTO `$tableName` VALUES (" . implode(',', $values) . ");\n");
         }
 
-    }, $fileName);
+        fwrite($handle, "\n\n");
+    }
+
+    fclose($handle);
+
+    return response()->download($filePath)->deleteFileAfterSend(true);
 }
 }
