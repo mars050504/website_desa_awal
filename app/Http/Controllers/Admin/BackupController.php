@@ -1,22 +1,27 @@
-public function backup()
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
+
+class BackupController extends Controller
 {
-    $tables = DB::select('SHOW TABLES');
-    $dbName = env('DB_DATABASE');
+    public function backup()
+    {
+        $tables = DB::select('SHOW TABLES');
+        $dbName = env('DB_DATABASE');
 
-    $fileName = 'backup_' . date('Y-m-d_H-i-s') . '.sql';
-
-    return response()->streamDownload(function () use ($tables, $dbName) {
-
-        echo "-- Backup Database\n";
-        echo "-- Generated: " . date('Y-m-d H:i:s') . "\n\n";
+        $sql = "-- Backup Database\n";
+        $sql .= "-- Generated: " . date('Y-m-d H:i:s') . "\n\n";
 
         foreach ($tables as $table) {
             $tableName = $table->{"Tables_in_$dbName"};
 
-            echo "DROP TABLE IF EXISTS `$tableName`;\n";
+            $sql .= "DROP TABLE IF EXISTS `$tableName`;\n";
 
             $create = DB::select("SHOW CREATE TABLE `$tableName`");
-            echo $create[0]->{'Create Table'} . ";\n\n";
+            $sql .= $create[0]->{'Create Table'} . ";\n\n";
 
             $rows = DB::table($tableName)->get();
 
@@ -31,11 +36,16 @@ public function backup()
                     }
                 }
 
-                echo "INSERT INTO `$tableName` VALUES (" . implode(',', $values) . ");\n";
+                $sql .= "INSERT INTO `$tableName` VALUES (" . implode(',', $values) . ");\n";
             }
 
-            echo "\n\n";
+            $sql .= "\n\n";
         }
 
-    }, $fileName);
+        $fileName = 'backup_' . date('Y-m-d_H-i-s') . '.sql';
+
+        return response($sql)
+            ->header('Content-Type', 'application/sql')
+            ->header('Content-Disposition', "attachment; filename={$fileName}");
+    }
 }
