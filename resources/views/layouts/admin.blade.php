@@ -6,6 +6,7 @@
     <title>Admin Desa</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
     <link rel="stylesheet" href="/css/admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -129,6 +130,15 @@
                             </a>
                         </li>
 
+                        <!-- 🔥 TAMBAHAN BACKUP -->
+                        <li>
+                            <a href="{{ route('admin.backup') }}"
+                                onclick="return confirm('Yakin ingin backup database?')">
+                                <i class="fas fa-database"></i>
+                                Backup Database
+                            </a>
+                        </li>
+
                     </ul>
                 </li>
 
@@ -201,5 +211,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
+
+</html>
 
 </html>
