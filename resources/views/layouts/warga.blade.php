@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <!-- CSS -->
+    <link rel="stylesheet" href="{{ asset('css/warga.css') }}">
+
     <link rel="stylesheet" href="/css/warga.css">
 
 </head>
@@ -71,7 +73,7 @@
         <div class="nav-right">
             @auth
             <div class="user-dropdown">
-                <div class="user-box">
+                <div class="user-box" onclick="toggleUserDropdown(event)">
                     <i class="fas fa-user-circle"></i>
                     <span>{{ auth()->user()->name }}</span>
                     <i class="fas fa-chevron-down"></i>
@@ -190,8 +192,18 @@
                 modal.style.display = "none";
             }
         }
+
+        function toggleUserDropdown(event) {
+            event.stopPropagation();
+
+            let dropdown = document.querySelector('.user-dropdown');
+            dropdown.classList.toggle('active');
+        }
     </script>
 
 </body>
+
+
+</html>
 
 </html>
