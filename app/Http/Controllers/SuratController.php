@@ -105,40 +105,49 @@ class SuratController extends Controller
 
     // ================= UPDATE (FILE + DATA) =================
     public function update(Request $request, $id)
-    {
-        // FILE
-        $data = [];
+{
+    $data = [];
 
-        foreach (['dok_ktp','dok_kk','dok_pengantar'] as $file) {
-            if ($request->hasFile($file)) {
-                $upload = Cloudinary::uploadFile(
-                    $request->file($file)->getRealPath(),
-                    ["resource_type" => "raw"]
-                );
+    // FILE
+    foreach (['dok_ktp','dok_kk','dok_pengantar'] as $file) {
+        if ($request->hasFile($file)) {
+            $upload = Cloudinary::uploadFile(
+                $request->file($file)->getRealPath(),
+                ["resource_type" => "raw"]
+            );
 
-                $data[$file] = $upload->getSecurePath();
-            }
+            $data[$file] = $upload->getSecurePath();
         }
+    }
 
+    // ⛔ CEGAH UPDATE KOSONG
+    if (!empty($data)) {
         DB::table('surat')
             ->where('id',$id)
             ->where('user_id',auth()->id())
             ->update($data);
+    }
 
-        // DATA DINAMIS
-        foreach ($request->except([
-            '_token','dok_ktp','dok_kk','dok_pengantar'
-        ]) as $field => $value) {
+    // DATA DINAMIS
+    foreach ($request->except([
+        '_token',
+        '_method',
+        'dok_ktp',
+        'dok_kk',
+        'dok_pengantar'
+    ]) as $field => $value) {
 
+        if ($value !== null && $value !== '') {
             DB::table('surat_detail')->updateOrInsert(
                 ['surat_id'=>$id,'field_name'=>$field],
                 ['value'=>$value]
             );
         }
-
-        return redirect('/riwayat-surat')
-            ->with('success','Data berhasil diperbarui');
     }
+
+    return redirect('/riwayat-surat')
+        ->with('success','Data berhasil diperbarui');
+}
 
     // ================= DELETE =================
     public function destroy($id)
