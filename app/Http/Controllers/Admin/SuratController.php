@@ -60,45 +60,65 @@ class SuratController extends Controller
 
     // ================= DETAIL =================
     public function show($id)
-    {
-        $surat = \App\Models\Surat::with('user')->findOrFail($id);
+{
+    // ================= AMBIL SURAT =================
+    $surat = \App\Models\Surat::with('user')->findOrFail($id);
 
-        $jenis = DB::table('jenis_surat')->where('id', $surat->jenis)->first();
+    // ================= AMBIL JENIS SURAT =================
+    $jenis = DB::table('jenis_surat')->where('id', $surat->jenis)->first();
 
-        $details = DB::table('surat_detail')
-            ->where('surat_id', $id)
-            ->pluck('value', 'field_name')
-            ->toArray();
+    // 🔥 JIKA JENIS TIDAK ADA → JANGAN CRASH
+    if (!$jenis) {
+        $jenis = (object)[
+            'template_text' => '',
+            'nama_jenis' => 'Tidak Diketahui'
+        ];
+    }
 
-        $ttl = $this->buildTTL(
-            $details['tempat_lahir'] ?? null,
-            $details['tanggal_lahir'] ?? null
-        );
+    // ================= AMBIL DETAIL =================
+    $details = DB::table('surat_detail')
+        ->where('surat_id', $id)
+        ->pluck('value', 'field_name')
+        ->toArray();
 
-        $details['ttl'] = $ttl;
-        $details['tanggal_surat'] = Carbon::now()->translatedFormat('d F Y');
+    // ================= TTL =================
+    $ttl = $this->buildTTL(
+        $details['tempat_lahir'] ?? null,
+        $details['tanggal_lahir'] ?? null
+    );
 
-        $details['nomor'] = $details['nomor'] ?? str_pad($surat->id, 3, '0', STR_PAD_LEFT);
-        $details['tahun'] = date('Y');
+    $details['ttl'] = $ttl;
+    $details['tanggal_surat'] = Carbon::now()->translatedFormat('d F Y');
 
-        $template = $jenis->template_text;
+    // ================= NOMOR =================
+    $details['nomor'] = $details['nomor'] ?? str_pad($surat->id, 3, '0', STR_PAD_LEFT);
+    $details['tahun'] = date('Y');
 
-        foreach ($details as $key => $value) {
-            $template = str_replace('{{' . $key . '}}', $value, $template);
-        }
+    // ================= TEMPLATE =================
+    $template = $jenis->template_text ?? '';
 
-        $template = str_replace('{{nama}}', $surat->nama, $template);
+    foreach ($details as $key => $value) {
+        $template = str_replace('{{' . $key . '}}', $value ?? '-', $template);
+    }
 
-        $isi = $surat->isi_surat ?? $template;
+    // ================= NAMA =================
+    $template = str_replace('{{nama}}', $surat->nama ?? '-', $template);
 
+    // ================= ISI =================
+    $isi = $surat->isi_surat ?? $template ?? '';
+
+    // ================= FIX TTL =================
+    if (!empty($isi)) {
         $isi = preg_replace(
             '/Tempat\s*&\s*Tgl\s*Lahir\s*:\s*.*/i',
             'Tempat & Tgl Lahir  : ' . $ttl,
             $isi
         );
-
-        return view('admin.surat.detail', compact('surat', 'isi'));
     }
+
+    // ================= RETURN VIEW =================
+    return view('admin.surat.detail', compact('surat', 'isi'));
+}
 
     // ================= UPDATE STATUS =================
     public function updateStatus(Request $request, $id)
