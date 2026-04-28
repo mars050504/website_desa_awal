@@ -13,6 +13,13 @@
             <span class="card-subtitle">Daftar surat yang pernah diajukan</span>
         </div>
 
+        @if(session('success'))
+        <div class="alert-success-custom">
+            <i class="fas fa-check-circle"></i>
+            {{ session('success') }}
+        </div>
+        @endif
+
         @if($surat->isEmpty())
 
         <div class="empty-state">
