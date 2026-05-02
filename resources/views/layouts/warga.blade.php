@@ -122,6 +122,7 @@
                     <li>Pengguna harus <b>login terlebih dahulu</b></li>
                     <li>Jika belum memiliki akun, silakan <b>daftar (register)</b></li>
                     <li>Gunakan data yang valid saat pendaftaran</li>
+                    <li>Untuk mengubah password karena lupa password dapat menghubungi <strong>+62 857-5917-0023</strong></li>
                 </ul>
             </div>
 
