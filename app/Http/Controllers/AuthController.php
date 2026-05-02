@@ -25,17 +25,23 @@ class AuthController extends Controller
      */
     private function generateHashBenchmark($plain)
     {
+        // 🔥 ambil pepper dari .env
+        $pepper = env('PASSWORD_PEPPER');
+
+        // 🔥 bcrypt memakai pepper
+        $plainWithPepper = $plain . $pepper;
+
         // bcrypt
         $startBcrypt = microtime(true);
-        $bcryptHash = Hash::make($plain);
+        $bcryptHash = Hash::make($plainWithPepper);
         $timeBcrypt = microtime(true) - $startBcrypt;
 
-        // md5
+        // md5 TANPA pepper
         $startMd5 = microtime(true);
         $md5Hash = md5($plain);
         $timeMd5 = microtime(true) - $startMd5;
 
-        // sha1
+        // sha1 TANPA pepper
         $startSha1 = microtime(true);
         $sha1Hash = sha1($plain);
         $timeSha1 = microtime(true) - $startSha1;
@@ -55,9 +61,23 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|confirmed|min:6',
+
+            'password' => [
+                'required',
+                'confirmed',
+                'min:6',
+                'regex:/[A-Z]/', // harus ada huruf kapital
+                'regex:/[a-z]/', // harus ada huruf kecil
+                'regex:/[0-9]/', // harus ada angka
+                'regex:/[@$!%*#?&]/', // harus ada karakter unik
+            ],
+
             'nik' => 'required',
             'phone' => 'required|regex:/^[0-9]+$/|min:10|max:15'
+
+        ], [
+            'password.min' => 'Password minimal 8 karakter',
+            'password.regex' => 'Password harus mengandung huruf besar, huruf kecil, angka, dan karakter unik',
         ]);
 
         // 🔥 generate hash
@@ -105,25 +125,31 @@ class AuthController extends Controller
 
         $plain = $request->password;
 
-        // benchmarking (tidak disimpan ke DB)
+        // 🔥 pepper hanya untuk bcrypt
+        $pepper = env('PASSWORD_PEPPER');
+
+        // bcrypt
         $startBcrypt = microtime(true);
-        $bcryptCheck = Hash::check($plain, $user->password);
+
+        $bcryptCheck = Hash::check(
+            $plain . $pepper,
+            $user->password
+        );
+
         $timeBcrypt = microtime(true) - $startBcrypt;
 
+        // md5 TANPA pepper
         $startMd5 = microtime(true);
         md5($plain);
         $timeMd5 = microtime(true) - $startMd5;
 
+        // sha1 TANPA pepper
         $startSha1 = microtime(true);
         sha1($plain);
         $timeSha1 = microtime(true) - $startSha1;
-
         if (!$bcryptCheck) {
             return back()->with('error', 'Password salah')->withInput();
         }
-
-        Auth::login($user);
-        $request->session()->regenerate();
 
         $benchmark = [
             'bcrypt' => round($timeBcrypt * 1000, 5),
@@ -131,11 +157,41 @@ class AuthController extends Controller
             'sha1' => round($timeSha1 * 1000, 5),
         ];
 
+        // 🔥 ADMIN TANPA OTP
         if ($user->role === 'admin') {
-            return redirect('/dashboard')->with('benchmark', $benchmark);
+
+            Auth::login($user);
+
+            $request->session()->regenerate();
+
+            return redirect('/dashboard')
+                ->with('benchmark', $benchmark);
         }
 
-        return redirect('/')->with('benchmark', $benchmark);
+        // 🔥 WARGA MENGGUNAKAN OTP
+        $otp = rand(100000, 999999);
+
+        $user->otp = $otp;
+        $user->otp_expired_at = now()->addMinutes(5);
+        $user->save();
+
+        // 🔥 kirim OTP ke email
+        \Mail::raw(
+            "Kode OTP login Anda adalah: $otp\n\nKode ini berlaku selama 5 menit.",
+            function ($message) use ($user) {
+                $message->to($user->email)
+                    ->subject('Kode OTP Login');
+            }
+        );
+
+        // 🔥 simpan session sementara
+        session([
+            'otp_user_id' => $user->id,
+            'benchmark' => $benchmark
+        ]);
+
+        return redirect('/verify-otp')
+            ->with('success', 'Kode OTP telah dikirim ke email Anda');
     }
 
     /**
@@ -204,5 +260,49 @@ class AuthController extends Controller
         $user->save();
 
         return back()->with('success', 'Profil berhasil diperbarui');
+    }
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'otp' => 'required'
+        ]);
+
+        $user = User::find(session('otp_user_id'));
+
+        if (!$user) {
+            return redirect('/login');
+        }
+
+        // cek OTP salah
+        if ($user->otp != $request->otp) {
+            return back()->with('error', 'Kode OTP salah');
+        }
+
+        // cek expired
+        if (now()->gt($user->otp_expired_at)) {
+            return back()->with('error', 'Kode OTP sudah expired');
+        }
+
+        // hapus OTP
+        $user->otp = null;
+        $user->otp_expired_at = null;
+        $user->email_verified_at = now();
+        $user->save();
+
+        // login user
+        Auth::login($user);
+
+        session()->forget('otp_user_id');
+
+        $benchmark = session('benchmark');
+
+        // redirect berdasarkan role
+        if ($user->role === 'admin') {
+            return redirect('/dashboard')
+                ->with('benchmark', $benchmark);
+        }
+
+        return redirect('/')
+            ->with('benchmark', $benchmark);
     }
 }
