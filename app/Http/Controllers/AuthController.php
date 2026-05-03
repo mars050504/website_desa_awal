@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\PasswordLog;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 
 class AuthController extends Controller
 {
@@ -120,15 +121,17 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (!$user) {
-            return back()->with('error', 'User tidak ditemukan')->withInput();
+            return back()
+                ->with('error', 'User tidak ditemukan')
+                ->withInput();
         }
 
         $plain = $request->password;
 
-        // 🔥 pepper hanya untuk bcrypt
+        // 🔥 ambil pepper
         $pepper = env('PASSWORD_PEPPER');
 
-        // bcrypt
+        // 🔥 benchmark bcrypt
         $startBcrypt = microtime(true);
 
         $bcryptCheck = Hash::check(
@@ -138,26 +141,39 @@ class AuthController extends Controller
 
         $timeBcrypt = microtime(true) - $startBcrypt;
 
-        // md5 TANPA pepper
+        // 🔥 benchmark md5
         $startMd5 = microtime(true);
+
         md5($plain);
+
         $timeMd5 = microtime(true) - $startMd5;
 
-        // sha1 TANPA pepper
+        // 🔥 benchmark sha1
         $startSha1 = microtime(true);
+
         sha1($plain);
+
         $timeSha1 = microtime(true) - $startSha1;
+
+        // 🔥 password salah
         if (!$bcryptCheck) {
-            return back()->with('error', 'Password salah')->withInput();
+
+            return back()
+                ->with('error', 'Password salah')
+                ->withInput();
         }
 
+        // 🔥 benchmark result
         $benchmark = [
             'bcrypt' => round($timeBcrypt * 1000, 5),
             'md5' => round($timeMd5 * 1000, 5),
             'sha1' => round($timeSha1 * 1000, 5),
         ];
 
+        // =====================================================
         // 🔥 ADMIN TANPA OTP
+        // =====================================================
+
         if ($user->role === 'admin') {
 
             Auth::login($user);
@@ -168,21 +184,59 @@ class AuthController extends Controller
                 ->with('benchmark', $benchmark);
         }
 
-        // 🔥 WARGA MENGGUNAKAN OTP
+        // =====================================================
+        // 🔥 WARGA DENGAN OTP EMAIL
+        // =====================================================
+
         $otp = rand(100000, 999999);
 
         $user->otp = $otp;
         $user->otp_expired_at = now()->addMinutes(5);
         $user->save();
 
-        // 🔥 kirim OTP ke email
-        \Mail::raw(
-            "Kode OTP login Anda adalah: $otp\n\nKode ini berlaku selama 5 menit.",
-            function ($message) use ($user) {
-                $message->to($user->email)
-                    ->subject('Kode OTP Login');
+        try {
+
+            // 🔥 kirim OTP menggunakan BREVO API
+            $response = Http::withHeaders([
+                'api-key' => env('BREVO_API_KEY'),
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])->post(
+                'https://api.brevo.com/v3/smtp/email',
+                [
+                    'sender' => [
+                        'name' => 'Desa Bloro',
+                        'email' => env('MAIL_FROM_ADDRESS'),
+                    ],
+
+                    'to' => [
+                        [
+                            'email' => $user->email
+                        ]
+                    ],
+
+                    'subject' => 'Kode OTP Login',
+
+                    'textContent' =>
+                    "Kode OTP login Anda adalah: $otp\n\nKode ini berlaku selama 5 menit."
+                ]
+            );
+
+            // 🔥 jika gagal kirim
+            if (!$response->successful()) {
+
+                return back()->with(
+                    'error',
+                    'Gagal mengirim OTP ke email user'
+                );
             }
-        );
+        } catch (\Exception $e) {
+
+            return back()->with(
+                'error',
+                'Server email sedang bermasalah'
+            );
+        }
 
         // 🔥 simpan session sementara
         session([
@@ -191,7 +245,10 @@ class AuthController extends Controller
         ]);
 
         return redirect('/verify-otp')
-            ->with('success', 'Kode OTP telah dikirim ke email Anda');
+            ->with(
+                'success',
+                'Kode OTP telah dikirim ke email Anda'
+            );
     }
 
     /**
