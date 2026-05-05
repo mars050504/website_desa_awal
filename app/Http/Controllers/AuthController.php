@@ -70,7 +70,7 @@ class AuthController extends Controller
                 'regex:/[A-Z]/', // harus ada huruf kapital
                 'regex:/[a-z]/', // harus ada huruf kecil
                 'regex:/[0-9]/', // harus ada angka
-                'regex:/[@$!%*#?&]/', // harus ada karakter unik
+                'regex:/[@$!%*#?&.,]/', // harus ada karakter unik
             ],
 
             'nik' => 'required',
