@@ -19,7 +19,6 @@ use App\Http\Controllers\Admin\WargaController;
 use App\Http\Controllers\Admin\JenisSuratController;
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\StrukturController;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 /*
 |--------------------------------------------------------------------------
