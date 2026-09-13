@@ -1,3 +1,4 @@
+
 <?php
 
 namespace App\Http\Controllers;
@@ -7,44 +8,55 @@ use App\Models\User;
 use App\Models\PasswordLog;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http;
 
 class AuthController extends Controller
 {
+    /**
+     * Halaman Login
+     */
     public function login()
     {
         return view('auth.login');
     }
 
+    /**
+     * Halaman Register
+     */
     public function register()
     {
         return view('auth.register');
     }
 
     /**
-     * 🔥 Helper untuk hashing + benchmark
+     * Helper untuk hashing + benchmark
      */
     private function generateHashBenchmark($plain)
     {
-        // 🔥 ambil pepper dari .env
+        // Ambil pepper dari .env
         $pepper = env('PASSWORD_PEPPER');
 
-        // 🔥 bcrypt memakai pepper
+        // Bcrypt menggunakan pepper
         $plainWithPepper = $plain . $pepper;
 
-        // bcrypt
+        // Benchmark Bcrypt
         $startBcrypt = microtime(true);
+
         $bcryptHash = Hash::make($plainWithPepper);
+
         $timeBcrypt = microtime(true) - $startBcrypt;
 
-        // md5 TANPA pepper
+        // Benchmark MD5
         $startMd5 = microtime(true);
+
         $md5Hash = md5($plain);
+
         $timeMd5 = microtime(true) - $startMd5;
 
-        // sha1 TANPA pepper
+        // Benchmark SHA-1
         $startSha1 = microtime(true);
+
         $sha1Hash = sha1($plain);
+
         $timeSha1 = microtime(true) - $startSha1;
 
         return [
@@ -57,34 +69,40 @@ class AuthController extends Controller
         ];
     }
 
+    /**
+     * REGISTER
+     */
     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
+
             'email' => 'required|email|unique:users,email',
 
             'password' => [
                 'required',
                 'confirmed',
                 'min:6',
-                'regex:/[A-Z]/', // harus ada huruf kapital
-                'regex:/[a-z]/', // harus ada huruf kecil
-                'regex:/[0-9]/', // harus ada angka
-                'regex:/[@$!%*#?&.,]/', // harus ada karakter unik
+                'regex:/[A-Z]/',
+                'regex:/[a-z]/',
+                'regex:/[0-9]/',
+                'regex:/[@$!%*#?&.,]/',
             ],
 
             'nik' => 'required',
+
             'phone' => 'required|regex:/^[0-9]+$/|min:10|max:15'
 
         ], [
-            'password.min' => 'Password minimal 8 karakter',
+            'password.min' => 'Password minimal 6 karakter',
+
             'password.regex' => 'Password harus mengandung huruf besar, huruf kecil, angka, dan karakter unik',
         ]);
 
-        // 🔥 generate hash
+        // Generate hash dan benchmark
         $hashData = $this->generateHashBenchmark($request->password);
 
-        // simpan user (bcrypt)
+        // Simpan user
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -94,10 +112,12 @@ class AuthController extends Controller
             'nik' => $request->nik,
             'alamat' => null,
             'phone' => $request->phone,
-            'email_verified_at' => now() // 🔥 langsung dianggap verified
+
+            // Langsung dianggap sudah terverifikasi
+            'email_verified_at' => now()
         ]);
 
-        // 🔥 simpan ke password_logs
+        // Simpan hasil benchmark
         PasswordLog::create([
             'user_id' => $user->id,
             'bcrypt_hash' => $hashData['bcrypt_hash'],
@@ -108,116 +128,127 @@ class AuthController extends Controller
             'time_sha1' => $hashData['time_sha1'],
         ]);
 
-        return redirect('/login')->with('success', 'Registrasi berhasil, silakan login');
+        return redirect('/login')
+            ->with('success', 'Registrasi berhasil, silakan login');
     }
 
-public function authenticate(Request $request)
-{
-    $request->validate([
-        'email' => 'required|email',
-        'password' => 'required',
-    ]);
+    /**
+     * LOGIN
+     *
+     * Login langsung tanpa OTP.
+     */
+    public function authenticate(Request $request)
+    {
+        // Validasi form login
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
 
-    // Cari user berdasarkan email
-    $user = User::where('email', $request->email)->first();
+        // Cari user berdasarkan email
+        $user = User::where('email', $request->email)->first();
 
-    if (!$user) {
-        return back()
-            ->with('error', 'User tidak ditemukan')
-            ->withInput();
-    }
+        if (!$user) {
+            return back()
+                ->with('error', 'User tidak ditemukan')
+                ->withInput();
+        }
 
-    $plain = $request->password;
+        $plain = $request->password;
 
-    // Ambil pepper dari .env
-    $pepper = env('PASSWORD_PEPPER');
+        // Ambil pepper dari .env
+        $pepper = env('PASSWORD_PEPPER');
 
-    // ==========================================
-    // BENCHMARK BCRYPT
-    // ==========================================
+        // ==================================================
+        // BCRYPT
+        // ==================================================
 
-    $startBcrypt = microtime(true);
+        $startBcrypt = microtime(true);
 
-    $bcryptCheck = Hash::check(
-        $plain . $pepper,
-        $user->password
-    );
+        $bcryptCheck = Hash::check(
+            $plain . $pepper,
+            $user->password
+        );
 
-    $timeBcrypt = microtime(true) - $startBcrypt;
+        $timeBcrypt = microtime(true) - $startBcrypt;
 
-    // ==========================================
-    // BENCHMARK MD5
-    // ==========================================
+        // ==================================================
+        // MD5
+        // ==================================================
 
-    $startMd5 = microtime(true);
+        $startMd5 = microtime(true);
 
-    md5($plain);
+        md5($plain);
 
-    $timeMd5 = microtime(true) - $startMd5;
+        $timeMd5 = microtime(true) - $startMd5;
 
-    // ==========================================
-    // BENCHMARK SHA-1
-    // ==========================================
+        // ==================================================
+        // SHA-1
+        // ==================================================
 
-    $startSha1 = microtime(true);
+        $startSha1 = microtime(true);
 
-    sha1($plain);
+        sha1($plain);
 
-    $timeSha1 = microtime(true) - $startSha1;
+        $timeSha1 = microtime(true) - $startSha1;
 
-    // ==========================================
-    // PASSWORD SALAH
-    // ==========================================
+        // ==================================================
+        // PASSWORD SALAH
+        // ==================================================
 
-    if (!$bcryptCheck) {
-        return back()
-            ->with('error', 'Password salah')
-            ->withInput();
-    }
+        if (!$bcryptCheck) {
+            return back()
+                ->with('error', 'Password salah')
+                ->withInput();
+        }
 
-    // ==========================================
-    // HASIL BENCHMARK
-    // ==========================================
+        // ==================================================
+        // HASIL BENCHMARK
+        // ==================================================
 
-    $benchmark = [
-        'bcrypt' => round($timeBcrypt * 1000, 5),
-        'md5' => round($timeMd5 * 1000, 5),
-        'sha1' => round($timeSha1 * 1000, 5),
-    ];
+        $benchmark = [
+            'bcrypt' => round($timeBcrypt * 1000, 5),
+            'md5' => round($timeMd5 * 1000, 5),
+            'sha1' => round($timeSha1 * 1000, 5),
+        ];
 
-    // ==========================================
-    // LOGIN LANGSUNG TANPA OTP
-    // ==========================================
+        // ==================================================
+        // LOGIN LANGSUNG
+        // TIDAK ADA OTP
+        // ==================================================
 
-    Auth::login($user);
+        Auth::login($user);
 
-    // Regenerasi session untuk keamanan
-    $request->session()->regenerate();
+        // Regenerasi session untuk keamanan
+        $request->session()->regenerate();
 
-    // ==========================================
-    // REDIRECT BERDASARKAN ROLE
-    // ==========================================
+        // ==================================================
+        // REDIRECT BERDASARKAN ROLE
+        // ==================================================
 
-    if ($user->role === 'admin') {
-        return redirect('/dashboard')
+        if ($user->role === 'admin') {
+
+            return redirect('/dashboard')
+                ->with('benchmark', $benchmark);
+        }
+
+        // Role warga
+        return redirect('/')
             ->with('benchmark', $benchmark);
     }
 
-    return redirect('/')
-        ->with('benchmark', $benchmark);
-}
-
     /**
-     * 🔹 LOGOUT
+     * LOGOUT
      */
     public function logout()
     {
         Auth::logout();
+
         return redirect('/login');
     }
 
     /**
-     * 🔹 PROFIL
+     * PROFIL
      */
     public function profil()
     {
@@ -225,7 +256,7 @@ public function authenticate(Request $request)
     }
 
     /**
-     * 🔹 UPDATE PROFIL + PASSWORD
+     * UPDATE PROFIL + PASSWORD
      */
     public function updateProfil(Request $request)
     {
@@ -237,12 +268,17 @@ public function authenticate(Request $request)
 
         $request->validate([
             'name' => 'required|string|max:255',
+
             'email' => 'required|email|unique:users,email,' . $user->id,
+
             'password' => 'nullable|confirmed|min:6',
+
             'phone' => 'nullable|regex:/^[0-9]+$/|min:10|max:15',
+
             'alamat' => 'nullable'
         ]);
 
+        // Update data profil
         $user->name = $request->name;
         $user->email = $request->email;
         $user->username = $request->email;
@@ -250,15 +286,20 @@ public function authenticate(Request $request)
         $user->alamat = $request->alamat;
         $user->phone = $request->phone;
 
-        // 🔥 kalau password diubah
+        // ==================================================
+        // UPDATE PASSWORD
+        // ==================================================
+
         if (!empty($request->password)) {
 
-            $hashData = $this->generateHashBenchmark($request->password);
+            $hashData = $this->generateHashBenchmark(
+                $request->password
+            );
 
-            // update password utama
+            // Update password utama
             $user->password = $hashData['bcrypt_hash'];
 
-            // simpan ke log
+            // Simpan benchmark password
             PasswordLog::create([
                 'user_id' => $user->id,
                 'bcrypt_hash' => $hashData['bcrypt_hash'],
@@ -272,50 +313,8 @@ public function authenticate(Request $request)
 
         $user->save();
 
-        return back()->with('success', 'Profil berhasil diperbarui');
-    }
-    public function verifyOtp(Request $request)
-    {
-        $request->validate([
-            'otp' => 'required'
-        ]);
-
-        $user = User::find(session('otp_user_id'));
-
-        if (!$user) {
-            return redirect('/login');
-        }
-
-        // cek OTP salah
-        if ($user->otp != $request->otp) {
-            return back()->with('error', 'Kode OTP salah');
-        }
-
-        // cek expired
-        if (now()->gt($user->otp_expired_at)) {
-            return back()->with('error', 'Kode OTP sudah expired');
-        }
-
-        // hapus OTP
-        $user->otp = null;
-        $user->otp_expired_at = null;
-        $user->email_verified_at = now();
-        $user->save();
-
-        // login user
-        Auth::login($user);
-
-        session()->forget('otp_user_id');
-
-        $benchmark = session('benchmark');
-
-        // redirect berdasarkan role
-        if ($user->role === 'admin') {
-            return redirect('/dashboard')
-                ->with('benchmark', $benchmark);
-        }
-
-        return redirect('/')
-            ->with('benchmark', $benchmark);
+        return back()
+            ->with('success', 'Profil berhasil diperbarui');
     }
 }
+
