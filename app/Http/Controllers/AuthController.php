@@ -111,7 +111,101 @@ class AuthController extends Controller
         return redirect('/login')->with('success', 'Registrasi berhasil, silakan login');
     }
 
-public function authenticate(Request $request) { $request->validate([ 'email' => 'required|email', 'password' => 'required', ]); $user = User::where('email', $request->email)->first(); if (!$user) { return back() ->with('error', 'User tidak ditemukan') ->withInput(); } $plain = $request->password; // Ambil pepper $pepper = env('PASSWORD_PEPPER'); // Benchmark bcrypt $startBcrypt = microtime(true); $bcryptCheck = Hash::check( $plain . $pepper, $user->password ); $timeBcrypt = microtime(true) - $startBcrypt; // Benchmark MD5 $startMd5 = microtime(true); md5($plain); $timeMd5 = microtime(true) - $startMd5; // Benchmark SHA-1 $startSha1 = microtime(true); sha1($plain); $timeSha1 = microtime(true) - $startSha1; // Password salah if (!$bcryptCheck) { return back() ->with('error', 'Password salah') ->withInput(); } // Benchmark result $benchmark = [ 'bcrypt' => round($timeBcrypt * 1000, 5), 'md5' => round($timeMd5 * 1000, 5), 'sha1' => round($timeSha1 * 1000, 5), ]; // Login langsung tanpa OTP Auth::login($user); // Regenerasi session untuk keamanan $request->session()->regenerate(); // Redirect berdasarkan role if ($user->role === 'admin') { return redirect('/dashboard') ->with('benchmark', $benchmark); } return redirect('/') ->with('benchmark', $benchmark); }
+public function authenticate(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required',
+    ]);
+
+    // Cari user berdasarkan email
+    $user = User::where('email', $request->email)->first();
+
+    if (!$user) {
+        return back()
+            ->with('error', 'User tidak ditemukan')
+            ->withInput();
+    }
+
+    $plain = $request->password;
+
+    // Ambil pepper dari .env
+    $pepper = env('PASSWORD_PEPPER');
+
+    // ==========================================
+    // BENCHMARK BCRYPT
+    // ==========================================
+
+    $startBcrypt = microtime(true);
+
+    $bcryptCheck = Hash::check(
+        $plain . $pepper,
+        $user->password
+    );
+
+    $timeBcrypt = microtime(true) - $startBcrypt;
+
+    // ==========================================
+    // BENCHMARK MD5
+    // ==========================================
+
+    $startMd5 = microtime(true);
+
+    md5($plain);
+
+    $timeMd5 = microtime(true) - $startMd5;
+
+    // ==========================================
+    // BENCHMARK SHA-1
+    // ==========================================
+
+    $startSha1 = microtime(true);
+
+    sha1($plain);
+
+    $timeSha1 = microtime(true) - $startSha1;
+
+    // ==========================================
+    // PASSWORD SALAH
+    // ==========================================
+
+    if (!$bcryptCheck) {
+        return back()
+            ->with('error', 'Password salah')
+            ->withInput();
+    }
+
+    // ==========================================
+    // HASIL BENCHMARK
+    // ==========================================
+
+    $benchmark = [
+        'bcrypt' => round($timeBcrypt * 1000, 5),
+        'md5' => round($timeMd5 * 1000, 5),
+        'sha1' => round($timeSha1 * 1000, 5),
+    ];
+
+    // ==========================================
+    // LOGIN LANGSUNG TANPA OTP
+    // ==========================================
+
+    Auth::login($user);
+
+    // Regenerasi session untuk keamanan
+    $request->session()->regenerate();
+
+    // ==========================================
+    // REDIRECT BERDASARKAN ROLE
+    // ==========================================
+
+    if ($user->role === 'admin') {
+        return redirect('/dashboard')
+            ->with('benchmark', $benchmark);
+    }
+
+    return redirect('/')
+        ->with('benchmark', $benchmark);
+}
 
     /**
      * 🔹 LOGOUT
