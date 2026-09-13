@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Http\Controllers;
@@ -32,31 +31,23 @@ class AuthController extends Controller
      */
     private function generateHashBenchmark($plain)
     {
-        // Ambil pepper dari .env
         $pepper = env('PASSWORD_PEPPER');
 
-        // Bcrypt menggunakan pepper
         $plainWithPepper = $plain . $pepper;
 
-        // Benchmark Bcrypt
+        // Bcrypt
         $startBcrypt = microtime(true);
-
         $bcryptHash = Hash::make($plainWithPepper);
-
         $timeBcrypt = microtime(true) - $startBcrypt;
 
-        // Benchmark MD5
+        // MD5
         $startMd5 = microtime(true);
-
         $md5Hash = md5($plain);
-
         $timeMd5 = microtime(true) - $startMd5;
 
-        // Benchmark SHA-1
+        // SHA-1
         $startSha1 = microtime(true);
-
         $sha1Hash = sha1($plain);
-
         $timeSha1 = microtime(true) - $startSha1;
 
         return [
@@ -91,12 +82,12 @@ class AuthController extends Controller
 
             'nik' => 'required',
 
-            'phone' => 'required|regex:/^[0-9]+$/|min:10|max:15'
-
+            'phone' => 'required|regex:/^[0-9]+$/|min:10|max:15',
         ], [
             'password.min' => 'Password minimal 6 karakter',
 
-            'password.regex' => 'Password harus mengandung huruf besar, huruf kecil, angka, dan karakter unik',
+            'password.regex' =>
+                'Password harus mengandung huruf besar, huruf kecil, angka, dan karakter unik',
         ]);
 
         // Generate hash dan benchmark
@@ -113,8 +104,8 @@ class AuthController extends Controller
             'alamat' => null,
             'phone' => $request->phone,
 
-            // Langsung dianggap sudah terverifikasi
-            'email_verified_at' => now()
+            // Tidak menggunakan OTP / email verification
+            'email_verified_at' => now(),
         ]);
 
         // Simpan hasil benchmark
@@ -139,13 +130,11 @@ class AuthController extends Controller
      */
     public function authenticate(Request $request)
     {
-        // Validasi form login
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
         ]);
 
-        // Cari user berdasarkan email
         $user = User::where('email', $request->email)->first();
 
         if (!$user) {
@@ -156,13 +145,10 @@ class AuthController extends Controller
 
         $plain = $request->password;
 
-        // Ambil pepper dari .env
+        // Pepper
         $pepper = env('PASSWORD_PEPPER');
 
-        // ==================================================
-        // BCRYPT
-        // ==================================================
-
+        // Bcrypt
         $startBcrypt = microtime(true);
 
         $bcryptCheck = Hash::check(
@@ -172,67 +158,46 @@ class AuthController extends Controller
 
         $timeBcrypt = microtime(true) - $startBcrypt;
 
-        // ==================================================
         // MD5
-        // ==================================================
-
         $startMd5 = microtime(true);
 
         md5($plain);
 
         $timeMd5 = microtime(true) - $startMd5;
 
-        // ==================================================
         // SHA-1
-        // ==================================================
-
         $startSha1 = microtime(true);
 
         sha1($plain);
 
         $timeSha1 = microtime(true) - $startSha1;
 
-        // ==================================================
-        // PASSWORD SALAH
-        // ==================================================
-
+        // Password salah
         if (!$bcryptCheck) {
             return back()
                 ->with('error', 'Password salah')
                 ->withInput();
         }
 
-        // ==================================================
-        // HASIL BENCHMARK
-        // ==================================================
-
+        // Benchmark
         $benchmark = [
             'bcrypt' => round($timeBcrypt * 1000, 5),
             'md5' => round($timeMd5 * 1000, 5),
             'sha1' => round($timeSha1 * 1000, 5),
         ];
 
-        // ==================================================
-        // LOGIN LANGSUNG
-        // TIDAK ADA OTP
-        // ==================================================
-
+        // Login langsung
         Auth::login($user);
 
-        // Regenerasi session untuk keamanan
+        // Regenerasi session
         $request->session()->regenerate();
 
-        // ==================================================
-        // REDIRECT BERDASARKAN ROLE
-        // ==================================================
-
+        // Redirect berdasarkan role
         if ($user->role === 'admin') {
-
             return redirect('/dashboard')
                 ->with('benchmark', $benchmark);
         }
 
-        // Role warga
         return redirect('/')
             ->with('benchmark', $benchmark);
     }
@@ -275,10 +240,9 @@ class AuthController extends Controller
 
             'phone' => 'nullable|regex:/^[0-9]+$/|min:10|max:15',
 
-            'alamat' => 'nullable'
+            'alamat' => 'nullable',
         ]);
 
-        // Update data profil
         $user->name = $request->name;
         $user->email = $request->email;
         $user->username = $request->email;
@@ -286,20 +250,15 @@ class AuthController extends Controller
         $user->alamat = $request->alamat;
         $user->phone = $request->phone;
 
-        // ==================================================
-        // UPDATE PASSWORD
-        // ==================================================
-
+        // Update password
         if (!empty($request->password)) {
 
             $hashData = $this->generateHashBenchmark(
                 $request->password
             );
 
-            // Update password utama
             $user->password = $hashData['bcrypt_hash'];
 
-            // Simpan benchmark password
             PasswordLog::create([
                 'user_id' => $user->id,
                 'bcrypt_hash' => $hashData['bcrypt_hash'],
@@ -317,4 +276,3 @@ class AuthController extends Controller
             ->with('success', 'Profil berhasil diperbarui');
     }
 }
-
