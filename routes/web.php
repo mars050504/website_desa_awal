@@ -48,11 +48,7 @@ Route::get('/register', [AuthController::class, 'register']);
 Route::post('/register', [AuthController::class, 'store']);
 
 Route::post('/logout', [AuthController::class, 'logout']);
-Route::get('/verify-otp', function () {
-    return view('auth.verify-otp');
-});
 
-Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 
 ////////////////////////////////////////////////////
 /// ✉️ EMAIL VERIFICATION
